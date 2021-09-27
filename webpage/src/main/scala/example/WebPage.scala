@@ -28,6 +28,7 @@ val addNoteForm: Div =
   )
   form.className = "note-form"
   form
+end addNoteForm
 
 val appContainer: Div =
   val container = div(h1("My Notepad"), addNoteForm)
@@ -50,10 +51,8 @@ def addNote(note: Note): Unit =
 def drawNotes(notes: Seq[Note]) =
   // 1. delete current notes
   val oldNotes = document.body.getElementsByClassName("note")
-  for i <- 0 until oldNotes.length do
-    val note = oldNotes.item(i)
-    appContainer.removeChild(note)
-
+  while oldNotes.length > 0 do
+    oldNotes(0).parentNode.removeChild(oldNotes(0))
   // 2 redraw notes
   notes.foreach(addNote(_))
 
