@@ -2,6 +2,7 @@ package example
 
 import org.scalajs.dom.document
 import org.scalajs.dom.html.*
+import org.scalajs.dom.raw.MouseEvent
 
 object DomHelper:
   def div(children: Element*): Div =
@@ -32,7 +33,8 @@ object DomHelper:
     val elem = document.createElement("textarea")
     elem.asInstanceOf[TextArea]
 
-  def button(textContent: String): Button =
-    val elem = document.createElement("button")
+  def button(textContent: String)(handler: MouseEvent => ?): Button =
+    val elem = document.createElement("button").asInstanceOf[Button]
     elem.textContent = textContent
-    elem.asInstanceOf[Button]
+    elem.onclick = handler
+    elem

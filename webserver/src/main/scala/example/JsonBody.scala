@@ -7,7 +7,8 @@ import io.circe.jawn.CirceSupportParser
 import java.io.OutputStream
 
 def parseBody[T: Decoder](req: Request): T =
-  CirceSupportParser.parseFromByteArray(req.bytes)
+  CirceSupportParser
+    .parseFromByteArray(req.bytes)
     .flatMap(_.as[T].toTry)
     .get
 
