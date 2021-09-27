@@ -10,8 +10,8 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
     )
   )
 
-lazy val webpage = project
-  .in(file("webpage"))
+lazy val client = project
+  .in(file("client"))
   .enablePlugins(ScalaJSPlugin)
   .settings(
     scalaJSUseMainModuleInitializer := true,
@@ -22,15 +22,15 @@ lazy val webpage = project
   )
   .dependsOn(core.js)
 
-lazy val webserver = project
-  .in(file("webserver"))
+lazy val server = project
+  .in(file("server"))
   .settings(
     libraryDependencies ++= Seq(
       "com.typesafe" % "config" % "1.4.1",
       "com.lihaoyi" %% "cask" % "0.7.11-2-fb9b10-DIRTY3d489885",
     ),
     Compile / resourceGenerators += Def.task {
-      val source = (webpage / Compile / scalaJSLinkedFile).value.data
+      val source = (client / Compile / scalaJSLinkedFile).value.data
       val dest = (Compile / resourceManaged).value / "assets" / "main.js"
       IO.copy(Seq(source -> dest))
       Seq(dest)
