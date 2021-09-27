@@ -1,19 +1,19 @@
 package example
 
 import cask.*
-import io.circe.generic.auto.*
 import com.typesafe.config.ConfigFactory
 import java.nio.file.Paths
 
 object WebServer extends MainRoutes:
-  @route("/api/notes", methods=Seq("get", "post"))
-  def api(req: Request) = 
+  @route("/api/notes", methods = Seq("get", "post"))
+  def api(req: Request) =
     if req.exchange.getRequestMethod.equalToString("get") then
       encodeBody(repository.getAllNotes())
-    else 
-      val CreateNote(title, content) = parseBody[CreateNote](req)
-      val newNote = repository.createNote(title, content)
-      encodeBody(newNote)
+    else
+      parseBody[Command](req) match
+        case Command.CreateNote(title, content) =>
+          encodeBody(repository.createNote(title, content))
+        case Command.DeleteNote(id) => encodeBody(repository.deleteNote(id))
 
   @staticResources("/index.html")
   def index() = "index.html"

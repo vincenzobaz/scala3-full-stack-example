@@ -1,6 +1,6 @@
 package example
 
-import cats.syntax.either._
+import cats.syntax.either.*
 import io.circe.Printer
 import io.circe.parser.decode
 import io.circe.syntax.*
@@ -24,9 +24,8 @@ object Repository:
     if !Files.exists(directory) then Files.createDirectory(directory)
     new FileRepository(directory)
 
-  private class FileRepository(directory: Path)
-      extends Repository:
-    def getAllNotes(): Seq[Note] = 
+  private class FileRepository(directory: Path) extends Repository:
+    def getAllNotes(): Seq[Note] =
       val files = Files.list(directory).iterator.asScala
       files
         .filter(_.toString.endsWith(".json"))
@@ -43,3 +42,8 @@ object Repository:
       val bytes = printer.print(note.asJson).getBytes
       Files.write(file, bytes, StandardOpenOption.CREATE)
       note
+
+    def deleteNote(id: String): Seq[Note] =
+      val file = directory.resolve(s"$id.json")
+      Files.delete(file)
+      getAllNotes()
