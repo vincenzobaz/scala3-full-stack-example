@@ -4,7 +4,7 @@ import org.scalajs.dom.html.Element
 import org.scalajs.dom.document
 import org.scalajs.dom.html.*
 
-import DomHelper.*
+import domtools.*
 
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
