@@ -41,7 +41,7 @@ def addNote(note: Note): Unit =
     button("x") { _ =>
       service
         .deleteNote(note.id)
-        .foreach(drawNotes(_))
+        .foreach(drawNotes)
     },
     p(note.content)
   )
@@ -54,8 +54,8 @@ def drawNotes(notes: Seq[Note]) =
   while oldNotes.length > 0 do
     oldNotes(0).parentNode.removeChild(oldNotes(0))
   // 2 redraw notes
-  notes.foreach(addNote(_))
+  notes.foreach(addNote)
 
 @main def start: Unit =
   document.body.appendChild(appContainer)
-  service.getAllNotes().foreach(drawNotes(_))
+  service.getAllNotes().foreach(drawNotes)
