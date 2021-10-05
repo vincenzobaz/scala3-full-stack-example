@@ -12,12 +12,19 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
 
 lazy val client = project
   .in(file("client"))
-  .enablePlugins(ScalaJSPlugin)
+  .enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin)
   .settings(
     scalaJSUseMainModuleInitializer := true,
+    Compile / scalaJSLinkerConfig ~= { _.withSourceMap(false).withModuleKind(ModuleKind.ESModule) },
+    Compile / useYarn := true,
+    Compile / npmDependencies ++= Seq(
+      "react" -> "17.0.2",
+      "react-dom" -> "17.0.2"
+    ),
     libraryDependencies ++= Seq(
       ("org.scala-js" %%% "scalajs-dom" % "1.2.0")
-        .cross(CrossVersion.for3Use2_13)
+        .cross(CrossVersion.for3Use2_13),
+      "com.github.japgolly.scalajs-react" %%% "core" % "2.0.0-RC3"
     )
   )
   .dependsOn(core.js)
