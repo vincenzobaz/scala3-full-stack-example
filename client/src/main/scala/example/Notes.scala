@@ -2,50 +2,77 @@ package example
 
 import japgolly.scalajs.react.vdom.html_<^.*
 import japgolly.scalajs.react.*
+import japgolly.scalajs.react.extra.StateSnapshot
+import scala.language.implicitConversions
+
 import scala.concurrent.ExecutionContext
+
+given ExecutionContext = ExecutionContext.global
+val client = HttpClient()
+
+val TitleForm = ScalaComponent
+  .builder[StateSnapshot[String]]
+  .render_P { stateSnapshot =>
+    <.input.text(
+      ^.value := stateSnapshot.value,
+      ^.onChange ==> ((e: ReactEventFromInput) =>
+        stateSnapshot.setState(e.target.value)
+      )
+    )
+  }
+  .build
+
+val ContentForm = ScalaComponent
+  .builder[StateSnapshot[String]]
+  .render_P { stateSnapshot =>
+    <.textarea(
+      ^.value := stateSnapshot.value,
+      ^.onChange ==> ((e: ReactEventFromInput) =>
+        stateSnapshot.setState(e.target.value)
+      )
+    )
+  }
+  .build
+
 
 case class State(notes: Seq[Note], title: String, content: String)
 
-class Backend($: BackendScope[Unit, State]):
-  given ExecutionContext = ExecutionContext.global
-  val client = HttpClient()
+def Main(init: Seq[Note]) = ScalaComponent
+  .builder[Unit]
+  .initialState[State](State(init, "", ""))
+  .render { $ =>
+    val state = $.state
+    val titleV = StateSnapshot
+      .zoom[State, String](_.title)(title => state => state.copy(title = title))
+      .of($)
+    val contentV = StateSnapshot
+      .zoom[State, String](_.content)(content =>
+        state => state.copy(content = content)
+      )
+      .of($)
 
-  private def deleteNote(id: String) = Callback {
-    client
-      .deleteNote(id)
-      .map(remainingNotes => $.modState(_.copy(notes = remainingNotes)))
-  }
+    def createNote(e: ReactEventFromInput) =
+      e.preventDefaultCB >> 
+        Callback.future(client.createNote(state.title, state.content).map(CallbackTo(_))) >>
+        Callback.future(client.getAllNotes().map(notes => $.setState(State(notes, "", ""))))
 
-  private val getAllNotes = Callback {
-    client.getAllNotes().map(newNotes => $.modState(_.copy(notes = newNotes)))
-  }
+    def deleteNote(id: String) = Callback.future {
+      client
+        .deleteNote(id)
+        .map(remainingNotes => $.modState(_.copy(notes = remainingNotes)))
+    }
 
-  private def updateContent(ev: ReactEventFromInput) = CallbackTo[Unit] {
-    $.modState(_.copy(content = ev.target.value))
-  }
-
-  private def updateTitle(ev: ReactEventFromInput) = CallbackTo[Unit] {
-    $.modState(_.copy(title = ev.target.value))
-  }
-
-  private def createNote(s: State) = CallbackTo[Unit] {
-    client
-      .createNote(s.title, s.content)
-      .flatMap(_ => client.getAllNotes())
-      .map(notes => $.modState(_ => State(notes, "", "")))
-  }
-
-  def render(s: State) =
     <.div(
       ^.id := "app-container",
       <.h1("My notepad"),
       <.form(
         ^.className := "note-form",
-        <.input.text(^.onInput ==> updateTitle), //title
-        <.textarea(^.onInput ==> updateContent), // content
-        <.button(^.onClick --> createNote(s), "Create Note")
+        ^.onSubmit ==> createNote,
+        TitleForm(titleV),
+        ContentForm(contentV),
+        <.button("Create Note")
       ),
-      s.notes.toTagMod(note =>
+      state.notes.toTagMod(note =>
         <.div(
           ^.className := "note",
           <.h2(note.title),
@@ -54,12 +81,8 @@ class Backend($: BackendScope[Unit, State]):
         )
       )
     )
+  }
+  .build
 
-@main def run = 
-  println("hey")
-  val topLevel = ScalaComponent.builder[Unit]
-    .initialState(State(Nil, "", ""))
-    .renderBackend[Backend]
-    .build
-
-  topLevel().renderIntoDOM(org.scalajs.dom.document.body)
+@main def run =
+  client.getAllNotes().map(Main(_)().renderIntoDOM(org.scalajs.dom.document.body))
