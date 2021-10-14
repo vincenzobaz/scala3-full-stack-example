@@ -7,9 +7,6 @@ import scala.language.implicitConversions
 
 import scala.concurrent.ExecutionContext
 
-given ExecutionContext = ExecutionContext.global
-val client = HttpClient()
-
 val TitleForm = ScalaComponent
   .builder[StateSnapshot[String]]
   .render_P { stateSnapshot =>
@@ -37,7 +34,7 @@ val ContentForm = ScalaComponent
 
 case class State(notes: Seq[Note], title: String, content: String)
 
-def Main(init: Seq[Note]) = ScalaComponent
+def App(init: Seq[Note]) = ScalaComponent
   .builder[Unit]
   .initialState[State](State(init, "", ""))
   .render { $ =>
@@ -84,5 +81,9 @@ def Main(init: Seq[Note]) = ScalaComponent
   }
   .build
 
+given ExecutionContext = ExecutionContext.global
+val client = HttpClient()
+
 @main def run =
-  client.getAllNotes().map(Main(_)().renderIntoDOM(org.scalajs.dom.document.body))
+  client.getAllNotes().map(App(_)()
+    .renderIntoDOM(org.scalajs.dom.document.body))
