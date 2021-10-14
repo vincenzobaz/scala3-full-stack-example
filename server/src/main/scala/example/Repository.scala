@@ -12,38 +12,33 @@ import java.nio.file.StandardOpenOption
 import java.util.UUID
 import scala.jdk.CollectionConverters.*
 
-trait Repository extends NoteService[[A] =>> A]
+final class FileRepository(directory: Path) extends NoteService[[A] =>> A]:
+  if !Files.exists(directory) then Files.createDirectory(directory)
 
-object Repository:
   private val printer: Printer = Printer(
     dropNullValues = true,
     indent = ""
   )
 
-  def apply(directory: Path): Repository =
-    if !Files.exists(directory) then Files.createDirectory(directory)
-    new FileRepository(directory)
+  def getAllNotes(): Seq[Note] =
+    val files = Files.list(directory).iterator.asScala
+    files
+      .filter(_.toString.endsWith(".json"))
+      .map { file =>
+        val bytes = Files.readAllBytes(file)
+        decode[Note](new String(bytes)).valueOr(throw _)
+      }
+      .toSeq
 
-  private class FileRepository(directory: Path) extends Repository:
-    def getAllNotes(): Seq[Note] =
-      val files = Files.list(directory).iterator.asScala
-      files
-        .filter(_.toString.endsWith(".json"))
-        .map { file =>
-          val bytes = Files.readAllBytes(file)
-          decode[Note](new String(bytes)).valueOr(throw _)
-        }
-        .toSeq
+  def createNote(title: String, content: String): Note =
+    val id = UUID.randomUUID().toString
+    val note = Note(id, title, content)
+    val file = directory.resolve(s"$id.json")
+    val bytes = printer.print(note.asJson).getBytes
+    Files.write(file, bytes, StandardOpenOption.CREATE)
+    note
 
-    def createNote(title: String, content: String): Note =
-      val id = UUID.randomUUID().toString
-      val note = Note(id, title, content)
-      val file = directory.resolve(s"$id.json")
-      val bytes = printer.print(note.asJson).getBytes
-      Files.write(file, bytes, StandardOpenOption.CREATE)
-      note
-
-    def deleteNote(id: String): Seq[Note] =
-      val file = directory.resolve(s"$id.json")
-      Files.delete(file)
-      getAllNotes()
+  def deleteNote(id: String): Seq[Note] =
+    val file = directory.resolve(s"$id.json")
+    Files.delete(file)
+    getAllNotes()
