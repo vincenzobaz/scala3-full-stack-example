@@ -25,6 +25,6 @@ object WebServer extends MainRoutes:
   override def host = config.getString("http.interface")
   override def port = config.getInt("http.port")
 
-  val repository = Repository(Paths.get(config.getString("example.directory")))
+  val repository = FileRepository(Paths.get(config.getString("example.directory")))
 
   initialize()
