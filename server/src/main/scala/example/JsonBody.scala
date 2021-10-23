@@ -12,7 +12,7 @@ def parseBody[T: Decoder](req: Request): T =
     .flatMap(_.as[T].toTry)
     .get
 
-def encodeBody[T](t: T)(using encoder: Encoder[T]): Response[Response.Data] =
+def encodeBody[T <: Seq[Note] | Note](t: T)(using encoder: Encoder[T]): Response[Response.Data] =
   val data = new Response.Data:
     def headers = Seq("Content-Type" -> "application/json")
     def write(out: OutputStream) =
