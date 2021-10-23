@@ -9,8 +9,8 @@ It uses both libraries that have already been published for Scala 3, like circe,
 
 ## Structure
 
-The `webpage` project is a Scala.js project that uses the scalajs-dom facade to manipulate the HTML document.
-It is served by an akka-http server in the `webserver` project.
+The `client` project is a Scala.js project that uses the scalajs-react facade to create a UI.
+It is served by an akka-http server in the `server` project.
 
 The data types are shared across the client and server in the `core` project.
 They are sent across the network in the json format using circe.
@@ -21,8 +21,6 @@ You can use sbt to run the application.
 
 ```text
 sbt:scala3-full-stack-example> webserver / run
-[info] running (fork) example.start 
-[info] Server online at http://localhost:8080/
 ```
 
-Then open the http://localhost:8080 page in your favorite browser.
+Then open the http://localhost:8080/index.html page in your favorite browser.
